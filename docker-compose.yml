@@ -1,0 +1,8 @@
+services:
+  bot:
+    build:
+      context: ./bot
+    container_name: ai-agent-bot
+    env_file:
+      - ./bot/.env
+    restart: unless-stopped
