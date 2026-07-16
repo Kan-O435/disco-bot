@@ -6,3 +6,11 @@ services:
     env_file:
       - ./bot/.env
     restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ai-agent-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
