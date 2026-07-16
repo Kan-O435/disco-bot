@@ -20,7 +20,12 @@ intents = discord.Intents.default()
 class AgentBot(commands.Bot):
     async def setup_hook(self):
         for extension in INITIAL_EXTENSIONS:
-            await self.load_extension(extension)
+            try:
+                await self.load_extension(extension)
+            except Exception:
+                print(f"⚠️ {extension} の読み込みに失敗しました")
+                import traceback
+                traceback.print_exc()
 
         guild = discord.Object(id=GUILD_ID)
         self.tree.copy_global_to(guild=guild)

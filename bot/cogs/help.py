@@ -4,7 +4,7 @@ from discord.ext import commands
 
 COMMAND_DESCRIPTIONS = (
     "**/ping** - pongと返信します\n"
-    "**/chat** - AIと会話します(準備中)\n"
+    "**/chat** - AIと会話します\n"
     "**/help** - コマンド一覧を表示します"
 )
 
