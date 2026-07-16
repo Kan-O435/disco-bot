@@ -15,6 +15,7 @@ INITIAL_EXTENSIONS = [
 ]
 
 intents = discord.Intents.default()
+intents.message_content = True
 
 
 class AgentBot(commands.Bot):

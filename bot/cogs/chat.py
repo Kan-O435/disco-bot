@@ -1,6 +1,6 @@
 import os
+import re
 import discord
-from discord import app_commands
 from discord.ext import commands
 from openai import AsyncOpenAI
 
@@ -12,16 +12,24 @@ class Chat(commands.Cog):
         self.bot = bot
         self.client = AsyncOpenAI()
 
-    @app_commands.command(name="chat", description="AIと会話します")
-    @app_commands.describe(message="AIに送るメッセージ")
-    async def chat(self, interaction: discord.Interaction, message: str):
-        await interaction.response.defer()
-        response = await self.client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": message}],
-        )
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if self.bot.user not in message.mentions:
+            return
+
+        content = re.sub(rf"<@!?{self.bot.user.id}>", "", message.content).strip()
+        if not content:
+            return
+
+        async with message.channel.typing():
+            response = await self.client.chat.completions.create(
+                model=MODEL,
+                messages=[{"role": "user", "content": content}],
+            )
         reply = response.choices[0].message.content
-        await interaction.followup.send(reply)
+        await message.reply(reply)
 
 
 async def setup(bot: commands.Bot):
