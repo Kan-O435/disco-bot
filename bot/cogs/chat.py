@@ -1,22 +1,23 @@
 import os
 import re
-from collections import defaultdict, deque
 
+import aiohttp
 import discord
 from discord.ext import commands
-from openai import AsyncOpenAI
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:8000")
 
 
 class Chat(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.client = AsyncOpenAI()
-        self.histories: dict[int, deque[dict]] = defaultdict(
-            lambda: deque(maxlen=HISTORY_LIMIT)
-        )
+        self.session: aiohttp.ClientSession | None = None
+
+    async def cog_load(self):
+        self.session = aiohttp.ClientSession()
+
+    async def cog_unload(self):
+        await self.session.close()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -29,18 +30,18 @@ class Chat(commands.Cog):
         if not content:
             return
 
-        history = self.histories[message.channel.id]
-        history.append({"role": "user", "content": content})
-
         async with message.channel.typing():
-            response = await self.client.chat.completions.create(
-                model=MODEL,
-                messages=list(history),
-            )
-        reply = response.choices[0].message.content
-        history.append({"role": "assistant", "content": reply})
+            async with self.session.post(
+                f"{BACKEND_URL}/chat",
+                json={
+                    "conversation_id": str(message.channel.id),
+                    "message": content,
+                },
+            ) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
 
-        await message.reply(reply)
+        await message.reply(data["reply"])
 
 
 async def setup(bot: commands.Bot):
