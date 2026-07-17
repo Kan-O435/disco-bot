@@ -15,6 +15,24 @@ services:
     container_name: ai-agent-backend
     env_file:
       - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/ai_agent
+    depends_on:
+      - db
     ports:
       - "8000:8000"
     restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: ai-agent-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_agent
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db_data:

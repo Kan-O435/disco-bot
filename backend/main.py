@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
+from db import check_connection
+
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
 
@@ -24,6 +26,12 @@ class ChatResponse(BaseModel):
 
 @app.get("/health")
 async def health():
+    return {"status": "ok"}
+
+
+@app.get("/health/db")
+async def health_db():
+    await check_connection()
     return {"status": "ok"}
 
 
