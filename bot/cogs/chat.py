@@ -1,27 +1,47 @@
 import os
-import discord
-from discord import app_commands
-from discord.ext import commands
-from openai import AsyncOpenAI
+import re
 
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+import aiohttp
+import discord
+from discord.ext import commands
+
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:8000")
 
 
 class Chat(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.client = AsyncOpenAI()
+        self.session: aiohttp.ClientSession | None = None
 
-    @app_commands.command(name="chat", description="AIと会話します")
-    @app_commands.describe(message="AIに送るメッセージ")
-    async def chat(self, interaction: discord.Interaction, message: str):
-        await interaction.response.defer()
-        response = await self.client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": message}],
-        )
-        reply = response.choices[0].message.content
-        await interaction.followup.send(reply)
+    async def cog_load(self):
+        self.session = aiohttp.ClientSession()
+
+    async def cog_unload(self):
+        await self.session.close()
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if self.bot.user not in message.mentions:
+            return
+
+        content = re.sub(rf"<@!?{self.bot.user.id}>", "", message.content).strip()
+        if not content:
+            return
+
+        async with message.channel.typing():
+            async with self.session.post(
+                f"{BACKEND_URL}/chat",
+                json={
+                    "conversation_id": str(message.channel.id),
+                    "message": content,
+                },
+            ) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
+
+        await message.reply(data["reply"])
 
 
 async def setup(bot: commands.Bot):
