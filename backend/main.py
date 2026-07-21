@@ -1,25 +1,16 @@
 import os
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from db import check_connection, create_tables
+from db import check_connection
 from history import get_history, save_message
-from models import Message  # noqa: F401 (registers table with Base.metadata)
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await create_tables()
-    yield
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 client = AsyncOpenAI()
 
 

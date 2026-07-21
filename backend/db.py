@@ -20,8 +20,3 @@ async def check_connection() -> bool:
     async with engine.connect() as conn:
         await conn.execute(text("SELECT 1"))
     return True
-
-
-async def create_tables():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
