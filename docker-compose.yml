@@ -24,7 +24,7 @@ services:
     restart: unless-stopped
 
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: ai-agent-db
     environment:
       POSTGRES_USER: postgres
