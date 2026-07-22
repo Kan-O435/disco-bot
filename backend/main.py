@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from db import check_connection
 from history import delete_old_messages, get_history, save_message
+from rag import ingest_directory
 from reminders import get_due_reminders
 from tools import TOOL_FUNCTIONS, TOOLS
 
@@ -49,6 +50,10 @@ class ChatResponse(BaseModel):
     reply: str
 
 
+class IngestRequest(BaseModel):
+    path: str = "/app/rag_documents"
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -63,6 +68,11 @@ async def health_db():
 @app.get("/reminders/due")
 async def reminders_due():
     return await get_due_reminders()
+
+
+@app.post("/documents/ingest")
+async def documents_ingest(request: IngestRequest):
+    return await ingest_directory(request.path)
 
 
 @app.post("/chat", response_model=ChatResponse)

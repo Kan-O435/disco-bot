@@ -5,7 +5,8 @@ from discord.ext import commands
 COMMAND_DESCRIPTIONS = (
     "**/ping** - pongと返信します\n"
     "**@メンション** - AIと会話します(例: @Botname こんにちは)\n"
-    "**/help** - コマンド一覧を表示します"
+    "**/help** - コマンド一覧を表示します\n"
+    "**/ingest** - 登録済みドキュメント(Markdown)を再取り込みします"
 )
 
 
