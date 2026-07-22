@@ -13,6 +13,7 @@ INITIAL_EXTENSIONS = [
     "cogs.chat",
     "cogs.help",
     "cogs.reminder",
+    "cogs.ingest",
 ]
 
 intents = discord.Intents.default()

@@ -21,10 +21,12 @@ services:
       - db
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/rag_documents:/app/rag_documents
     restart: unless-stopped
 
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: ai-agent-db
     environment:
       POSTGRES_USER: postgres
