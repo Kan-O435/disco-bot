@@ -12,6 +12,7 @@ INITIAL_EXTENSIONS = [
     "cogs.ping",
     "cogs.chat",
     "cogs.help",
+    "cogs.reminder",
 ]
 
 intents = discord.Intents.default()
