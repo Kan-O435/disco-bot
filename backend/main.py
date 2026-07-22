@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from db import check_connection
 from history import get_history, save_message
+from tools import TOOL_FUNCTIONS, TOOLS
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
@@ -42,8 +43,30 @@ async def chat(request: ChatRequest):
     response = await client.chat.completions.create(
         model=MODEL,
         messages=history,
+        tools=TOOLS,
     )
-    reply = response.choices[0].message.content
+    message = response.choices[0].message
+
+    if message.tool_calls:
+        history.append(message.model_dump(exclude_none=True))
+        for tool_call in message.tool_calls:
+            func = TOOL_FUNCTIONS[tool_call.function.name]
+            result = func()
+            history.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": str(result),
+                }
+            )
+
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=history,
+        )
+        message = response.choices[0].message
+
+    reply = message.content
     await save_message(request.conversation_id, "assistant", reply)
 
     return ChatResponse(reply=reply)
