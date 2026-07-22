@@ -1,3 +1,4 @@
+import json
 import os
 
 from fastapi import FastAPI
@@ -6,6 +7,8 @@ from pydantic import BaseModel
 
 from db import check_connection
 from history import get_history, save_message
+from reminders import get_due_reminders
+from tools import TOOL_FUNCTIONS, TOOLS
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
@@ -34,6 +37,11 @@ async def health_db():
     return {"status": "ok"}
 
 
+@app.get("/reminders/due")
+async def reminders_due():
+    return await get_due_reminders()
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     await save_message(request.conversation_id, "user", request.message)
@@ -42,8 +50,31 @@ async def chat(request: ChatRequest):
     response = await client.chat.completions.create(
         model=MODEL,
         messages=history,
+        tools=TOOLS,
     )
-    reply = response.choices[0].message.content
+    message = response.choices[0].message
+
+    if message.tool_calls:
+        history.append(message.model_dump(exclude_none=True))
+        for tool_call in message.tool_calls:
+            func = TOOL_FUNCTIONS[tool_call.function.name]
+            args = json.loads(tool_call.function.arguments)
+            result = await func(conversation_id=request.conversation_id, **args)
+            history.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": str(result),
+                }
+            )
+
+        response = await client.chat.completions.create(
+            model=MODEL,
+            messages=history,
+        )
+        message = response.choices[0].message
+
+    reply = message.content
     await save_message(request.conversation_id, "assistant", reply)
 
     return ChatResponse(reply=reply)
