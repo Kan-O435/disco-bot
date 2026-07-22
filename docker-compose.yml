@@ -21,6 +21,8 @@ services:
       - db
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/rag_documents:/app/rag_documents
     restart: unless-stopped
 
   db:

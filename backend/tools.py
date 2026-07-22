@@ -6,6 +6,7 @@ from db import async_session
 from memory import recall_memory, save_memory
 from models import Task
 from news import get_ai_news, get_english_news, get_it_news, get_semiconductor_news
+from rag import search_documents
 from timeutil import JST
 
 
@@ -200,6 +201,20 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_documents",
+            "description": "登録済みのドキュメント(Markdownノートなど)から関連する内容を検索します。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "検索したい内容"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 TOOL_FUNCTIONS = {
@@ -213,4 +228,5 @@ TOOL_FUNCTIONS = {
     "get_semiconductor_news": get_semiconductor_news,
     "save_memory": save_memory,
     "recall_memory": recall_memory,
+    "search_documents": search_documents,
 }
