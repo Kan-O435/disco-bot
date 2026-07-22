@@ -1,19 +1,42 @@
+import asyncio
 import json
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from db import check_connection
-from history import get_history, save_message
+from history import delete_old_messages, get_history, save_message
 from reminders import get_due_reminders
 from tools import TOOL_FUNCTIONS, TOOLS
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
+MESSAGE_RETENTION_DAYS = int(os.getenv("MESSAGE_RETENTION_DAYS", "30"))
+CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60
 
-app = FastAPI()
+
+async def cleanup_loop():
+    while True:
+        try:
+            deleted = await delete_old_messages(MESSAGE_RETENTION_DAYS)
+            if deleted:
+                print(f"🧹 {deleted}件の古いメッセージを削除しました")
+        except Exception as e:
+            print(f"⚠️ メッセージ削除中にエラーが発生しました: {e}")
+        await asyncio.sleep(CLEANUP_INTERVAL_SECONDS)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(cleanup_loop())
+    yield
+    task.cancel()
+
+
+app = FastAPI(lifespan=lifespan)
 client = AsyncOpenAI()
 
 
