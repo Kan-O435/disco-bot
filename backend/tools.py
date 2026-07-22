@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from db import async_session
 from models import Task
+from news import get_ai_news, get_english_news, get_it_news, get_semiconductor_news
 from timeutil import JST
 
 
@@ -135,6 +136,38 @@ TOOLS = [
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_ai_news",
+            "description": "直近24時間のAI関連ニュースを取得します(Hacker News検索)",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_it_news",
+            "description": "AWSやIT技術全般など、Hacker Newsの現在の上位ニュースを取得します",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_english_news",
+            "description": "英語学習用に、BBC Newsの英語の国際ニュースを取得します",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_semiconductor_news",
+            "description": "半導体やシミュレーション分野の最新論文(arXiv)を取得します",
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+    },
 ]
 
 TOOL_FUNCTIONS = {
@@ -142,4 +175,8 @@ TOOL_FUNCTIONS = {
     "add_daily_task": add_daily_task,
     "add_deadline_task": add_deadline_task,
     "list_tasks": list_tasks,
+    "get_ai_news": get_ai_news,
+    "get_it_news": get_it_news,
+    "get_english_news": get_english_news,
+    "get_semiconductor_news": get_semiconductor_news,
 }
