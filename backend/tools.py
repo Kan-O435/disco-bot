@@ -3,6 +3,7 @@ from datetime import date, datetime
 from sqlalchemy import select
 
 from db import async_session
+from memory import recall_memory, save_memory
 from models import Task
 from news import get_ai_news, get_english_news, get_it_news, get_semiconductor_news
 from timeutil import JST
@@ -168,6 +169,37 @@ TOOLS = [
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "save_memory",
+            "description": "ユーザーに関する重要な情報を長期記憶として保存します。今後の会話でも思い出せるようになります。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "fact": {"type": "string", "description": "覚えておくべき情報"},
+                },
+                "required": ["fact"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "recall_memory",
+            "description": "過去に保存した長期記憶の中から、関連する情報を検索して思い出します。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "思い出したい内容に関するキーワードや質問",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 TOOL_FUNCTIONS = {
@@ -179,4 +211,6 @@ TOOL_FUNCTIONS = {
     "get_it_news": get_it_news,
     "get_english_news": get_english_news,
     "get_semiconductor_news": get_semiconductor_news,
+    "save_memory": save_memory,
+    "recall_memory": recall_memory,
 }
