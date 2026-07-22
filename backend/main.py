@@ -1,3 +1,4 @@
+import json
 import os
 
 from fastapi import FastAPI
@@ -51,7 +52,8 @@ async def chat(request: ChatRequest):
         history.append(message.model_dump(exclude_none=True))
         for tool_call in message.tool_calls:
             func = TOOL_FUNCTIONS[tool_call.function.name]
-            result = func()
+            args = json.loads(tool_call.function.arguments)
+            result = await func(conversation_id=request.conversation_id, **args)
             history.append(
                 {
                     "role": "tool",
