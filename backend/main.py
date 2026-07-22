@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from db import check_connection
 from history import get_history, save_message
+from reminders import get_due_reminders
 from tools import TOOL_FUNCTIONS, TOOLS
 
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
@@ -34,6 +35,11 @@ async def health():
 async def health_db():
     await check_connection()
     return {"status": "ok"}
+
+
+@app.get("/reminders/due")
+async def reminders_due():
+    return await get_due_reminders()
 
 
 @app.post("/chat", response_model=ChatResponse)

@@ -27,6 +27,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(Text)
     remind_time: Mapped[str | None] = mapped_column(String, nullable=True)  # "HH:MM"
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    last_reminded_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
