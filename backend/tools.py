@@ -1,13 +1,14 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 
 from sqlalchemy import select
 
 from db import async_session
 from models import Task
+from timeutil import JST
 
 
 async def get_current_time(conversation_id: str) -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    return datetime.now(JST).strftime("%Y-%m-%d %H:%M:%S JST")
 
 
 async def add_daily_task(conversation_id: str, title: str, remind_time: str) -> str:
@@ -86,7 +87,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_current_time",
-            "description": "現在の日時(UTC)を取得します",
+            "description": "現在の日時(日本時間, JST)を取得します",
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
     },

@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 
 from db import async_session
 from models import Task
+from timeutil import JST
 
-JST = timezone(timedelta(hours=9))
 DEADLINE_REMIND_TIME = "09:00"
 
 
