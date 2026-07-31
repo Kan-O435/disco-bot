@@ -13,6 +13,14 @@ from rag import ingest_directory
 from reminders import get_due_reminders
 from tools import TOOL_FUNCTIONS, TOOLS
 
+SYSTEM_PROMPT = (
+    "あなたは元気いっぱいなアイドル風のAIアシスタント。テンション高めのタメ口で話す。"
+    "ただし猫かぶりはせず、ちょっと毒舌で口が悪いところもある。ユーザーの発言には遠慮なくツッコミや軽口を入れていい。"
+    "「〜だよ」「〜じゃん」「はぁ?」「んなことも知らないの?」のようなくだけた言い回しを使い、"
+    "絵文字には頼らず言葉のテンションで元気さを出すこと。"
+    "ただし、人格否定・差別・誹謗中傷など本当に人を傷つける発言はしないこと。あくまで愛のある毒舌に留める。"
+)
+
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "20"))
 MESSAGE_RETENTION_DAYS = int(os.getenv("MESSAGE_RETENTION_DAYS", "30"))
@@ -79,21 +87,22 @@ async def documents_ingest(request: IngestRequest):
 async def chat(request: ChatRequest):
     await save_message(request.conversation_id, "user", request.message)
     history = await get_history(request.conversation_id, HISTORY_LIMIT)
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
 
     response = await client.chat.completions.create(
         model=MODEL,
-        messages=history,
+        messages=messages,
         tools=TOOLS,
     )
     message = response.choices[0].message
 
     if message.tool_calls:
-        history.append(message.model_dump(exclude_none=True))
+        messages.append(message.model_dump(exclude_none=True))
         for tool_call in message.tool_calls:
             func = TOOL_FUNCTIONS[tool_call.function.name]
             args = json.loads(tool_call.function.arguments)
             result = await func(conversation_id=request.conversation_id, **args)
-            history.append(
+            messages.append(
                 {
                     "role": "tool",
                     "tool_call_id": tool_call.id,
@@ -103,7 +112,7 @@ async def chat(request: ChatRequest):
 
         response = await client.chat.completions.create(
             model=MODEL,
-            messages=history,
+            messages=messages,
         )
         message = response.choices[0].message
 
