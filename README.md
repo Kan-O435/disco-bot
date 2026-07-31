@@ -34,6 +34,7 @@ Backend (FastAPI)
   - **Memory**: 「覚えておいて」等の発言をベクトル化して長期記憶として保存し、関連する話題が出たときに意味的検索で思い出す(直近の会話履歴の範囲外でも機能する)
   - **RAG(Markdown)**: `backend/rag_documents/`に置いたMarkdownファイルを`/ingest`で取り込み、`@メンション`での会話中に内容を検索して回答に利用できる
 - `messages`テーブルの自動削除(デフォルト30日、`MESSAGE_RETENTION_DAYS`で変更可)
+- キャラクター設定(システムプロンプト): テンション高めのタメ口・ちょっと毒舌なアイドル風キャラクターとして応答する(`backend/main.py`の`SYSTEM_PROMPT`で定義。人格否定や誹謗中傷はしないようガードレールを明記済み)
 
 ## セットアップ
 
@@ -74,6 +75,21 @@ docker exec ai-agent-backend alembic upgrade head
 ### RAG用ドキュメントの追加
 
 `backend/rag_documents/`にMarkdownファイルを置き、Discordで`/ingest`を実行すると検索対象に反映される。詳細は[backend/rag_documents/README.md](./backend/rag_documents/README.md)を参照。
+
+## デプロイ
+
+Discord Botは常時Discordとの接続を維持する必要があるため、アクセスがないとスリープするタイプの無料ホスティング(Render等)とは相性が悪い。**常時起動できる無料VM**での運用を想定している。
+
+- 候補: Google Cloud Compute Engine の Always Free 対象インスタンス(`e2-micro`)
+  - Always Free対象リージョンは `us-west1` / `us-central1` / `us-east1` の3つのみ(それ以外は課金対象になるので注意)
+- 手順の概要:
+  1. VMインスタンスを作成(Ubuntu 22.04、`e2-micro`)
+  2. SSH接続し、Docker・Docker Compose・gitをインストール
+  3. リポジトリをclone
+  4. `bot/.env`, `backend/.env` を作成し、実際の値を設定
+  5. `docker compose up -d --build`
+
+バックエンド(FastAPI)はBotコンテナからのみアクセスされるため、外部への公開ポート開放は不要(SSH用の22番のみで足りる)。
 
 ## 既知の課題 / 今後の予定
 
